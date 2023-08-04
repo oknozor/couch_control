@@ -1,10 +1,13 @@
+use crate::keyboard::emulate_keyboard;
 use env_logger::Env;
+use evdev::Key;
 use log::info;
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
 use sysinfo::{System, SystemExt};
-use virtual_key::{emulate_keyboard, Key};
+
+mod keyboard;
 
 fn main() -> anyhow::Result<()> {
     let mut emulation_running = false;

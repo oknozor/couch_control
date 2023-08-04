@@ -1,9 +1,0 @@
-[package]
-name = "virtual_key"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-evdev.workspace = true
-anyhow.workspace = true
-log.workspace = true
