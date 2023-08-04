@@ -2,12 +2,12 @@ mod commands;
 mod sway_output;
 
 use crate::commands::Command;
-use cursive::view::Margins;
-use cursive::views::Button;
+
+use cursive::views::{CircularFocus};
 use cursive::{
     traits::*,
-    views::{Dialog, ListView},
-    CursiveRunnable,
+    views::{Dialog},
+    Cursive, CursiveRunnable,
 };
 
 fn main() -> anyhow::Result<()> {
@@ -18,39 +18,46 @@ fn main() -> anyhow::Result<()> {
 
 fn create_tui() -> CursiveRunnable {
     let mut siv = cursive::default();
-
-    let mut dialog = Dialog::new()
-        .title("Welcome back Okno")
-        .button("Quit", |s| s.quit())
-        .content(
-            ListView::new()
-                // Each child is a single-line view with a label
-                .child("", Button::new("Audio", |_s| {}).fixed_width(10))
-                .child("", Button::new("Display", |_s| {}).fixed_width(10))
-                .child(
-                    "",
-                    Button::new("Kodi Mode", |_s| {
-                        // TODO
-                    })
-                    .fixed_width(10),
-                )
-                .child(
-                    "",
-                    Button::new("Steam Mode", move |s| {
-                        Command::EnableSteamMode.run().unwrap();
-                        s.quit();
-                    })
-                    .fixed_width(10),
-                )
-                .child(
-                    "",
-                    Button::new("Desktop Mode", |_clicked| {}).fixed_width(10),
-                ),
-        );
-
-    dialog.set_padding(Margins::lrtb(3, 3, 3, 3));
-
-    siv.add_layer(dialog);
+    siv.load_toml(include_str!("../assets/theme.toml")).unwrap();
+    siv.add_layer(main_layer());
 
     siv
+}
+
+fn main_layer() -> CircularFocus<Dialog> {
+    Dialog::new()
+        .title("Welcome back Okno")
+        .button("Quit", |s| s.quit())
+        .button("Display", show_displays)
+        .button("Steam Mode", move |s| {
+            Command::EnableSteamMode.run().unwrap();
+            s.quit();
+        })
+        .button("Desktop Mode", |_clicked| {})
+        .wrap_with(CircularFocus::new)
+        .wrap_tab()
+}
+
+fn show_displays(s: &mut Cursive) {
+    s.pop_layer();
+    s.add_layer(
+        Dialog::text("Select a profile")
+            .button("Back", |s| {
+                s.pop_layer();
+                s.add_layer(main_layer())
+            })
+            .title("Profile")
+            .button("Desktop", |s| {
+                Command::DesktopOnly.run().unwrap();
+                s.quit()
+            })
+            .button("TV", |s| {
+                Command::TvOnly.run().unwrap();
+                s.quit()
+            })
+            .button("Hybrid", |s| {
+                Command::TvAndDesktop.run().unwrap();
+                s.quit()
+            }),
+    );
 }

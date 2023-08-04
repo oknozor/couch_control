@@ -1,11 +1,10 @@
-
 [workspace]
 members = ["crates/*"]
 resolver = "2"
 
 [workspace.dependencies]
 swayipc = "3.0.1"
-cursive = "0.20.0"
+cursive = { version = "0.20.0", features = ["toml"] }
 evdev = "0.12.1"
 anyhow = "1.0.72"
 log = "0.4.19"
