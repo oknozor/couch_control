@@ -1,0 +1,13 @@
+[package]
+name = "xboxkbd"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+virtual_key.workspace = true
+anyhow.workspace = true
+log.workspace = true
+env_logger.workspace = true
+sysinfo = "0.29.7"

@@ -1,0 +1,13 @@
+
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.dependencies]
+swayipc = "3.0.1"
+cursive = "0.20.0"
+evdev = "0.12.1"
+anyhow = "1.0.72"
+log = "0.4.19"
+env_logger = "0.10.0"
+virtual_key = { path = "crates/virtual_key" }
