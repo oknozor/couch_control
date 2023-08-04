@@ -9,7 +9,7 @@ use virtual_key::{emulate_keyboard, Key};
 fn main() -> anyhow::Result<()> {
     let mut emulation_running = false;
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-
+    let mut shutdown_sender = None;
     loop {
         let (shutdown_tx, shutdown_rx) = channel();
         let s = System::new_all();
@@ -19,6 +19,8 @@ fn main() -> anyhow::Result<()> {
             None if !emulation_running => {
                 info!("Steam not running starting xbox keyboard emulation");
                 emulation_running = true;
+                shutdown_sender = Some(shutdown_tx);
+
                 thread::spawn(move || {
                     emulate_keyboard(
                         shutdown_rx,
@@ -30,12 +32,15 @@ fn main() -> anyhow::Result<()> {
                             (Key::BTN_MODE, Key::KEY_LEFTMETA),
                         ],
                     )
-                        .expect("Xbox Keyboard emulation  failed")
+                    .expect("Xbox Keyboard emulation  failed")
                 });
             }
             Some(_) if emulation_running => {
                 info!("Steam is now running shutting down keyboard emulation");
-                shutdown_tx.send(())?;
+                shutdown_sender
+                    .clone()
+                    .expect("Sender should be set")
+                    .send(())?;
                 info!("Message sent mother fucker");
                 emulation_running = false
             }

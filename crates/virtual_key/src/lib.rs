@@ -1,12 +1,13 @@
 use crate::keyboard::FakeKeyboard;
 use evdev::{AbsoluteAxisType, InputEventKind};
+use std::cmp::Ordering;
 use std::sync::mpsc::Receiver;
 use std::time::SystemTime;
 
 mod keyboard;
 
 pub use evdev::Key;
-use log::{info};
+use log::info;
 
 const AXIS_THRESHOLD: i32 = 30000;
 const PRESSURE_DELAY: u128 = 150;
@@ -27,10 +28,10 @@ pub fn emulate_keyboard(
     let mut last_axis_input_time = SystemTime::now();
 
     info!("Starting Keyboard emulation");
-    loop {
+    while shutdown_rx.try_recv().is_err() {
         for ev in dev.fetch_events().unwrap() {
             match ev.kind() {
-                  InputEventKind::Key(key) => {
+                InputEventKind::Key(key) => {
                     let key = mappings
                         .iter()
                         .find(|(xbox_key, _)| key == *xbox_key)
@@ -53,12 +54,16 @@ pub fn emulate_keyboard(
                                     .as_millis();
                                 if elapsed > PRESSURE_DELAY {
                                     last_axis_input_time = event_timestamp;
-                                    if value > 0 {
-                                        virtual_keyboard.emit_key(Key::KEY_RIGHT, 1)?;
-                                        virtual_keyboard.emit_key(Key::KEY_RIGHT, 0)?;
-                                    } else if value < 0 {
-                                        virtual_keyboard.emit_key(Key::KEY_LEFT, 1)?;
-                                        virtual_keyboard.emit_key(Key::KEY_LEFT, 0)?;
+                                    match value.cmp(&0) {
+                                        Ordering::Less => {
+                                            virtual_keyboard.emit_key(Key::KEY_LEFT, 1)?;
+                                            virtual_keyboard.emit_key(Key::KEY_LEFT, 0)?;
+                                        }
+                                        Ordering::Greater => {
+                                            virtual_keyboard.emit_key(Key::KEY_RIGHT, 1)?;
+                                            virtual_keyboard.emit_key(Key::KEY_RIGHT, 0)?;
+                                        }
+                                        Ordering::Equal => {}
                                     }
                                 }
                             }
@@ -74,12 +79,16 @@ pub fn emulate_keyboard(
                                     .as_millis();
                                 if elapsed > PRESSURE_DELAY {
                                     last_axis_input_time = event_timestamp;
-                                    if value > 0 {
-                                        virtual_keyboard.emit_key(Key::KEY_DOWN, 1)?;
-                                        virtual_keyboard.emit_key(Key::KEY_DOWN, 0)?;
-                                    } else if value < 0 {
-                                        virtual_keyboard.emit_key(Key::KEY_UP, 1)?;
-                                        virtual_keyboard.emit_key(Key::KEY_UP, 0)?;
+                                    match value.cmp(&0) {
+                                        Ordering::Less => {
+                                            virtual_keyboard.emit_key(Key::KEY_UP, 1)?;
+                                            virtual_keyboard.emit_key(Key::KEY_UP, 0)?;
+                                        }
+                                        Ordering::Greater => {
+                                            virtual_keyboard.emit_key(Key::KEY_DOWN, 1)?;
+                                            virtual_keyboard.emit_key(Key::KEY_DOWN, 0)?;
+                                        }
+                                        Ordering::Equal => {}
                                     }
                                 }
                             }
@@ -91,6 +100,9 @@ pub fn emulate_keyboard(
             }
         }
     }
+    info!("Terminating Keyboard emulation");
+
+    Ok(())
 }
 
 #[cfg(test)]
