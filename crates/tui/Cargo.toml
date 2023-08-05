@@ -9,3 +9,4 @@ edition = "2021"
 swayipc.workspace = true
 cursive.workspace = true
 anyhow.workspace = true
+nix.workspace = true

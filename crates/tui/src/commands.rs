@@ -1,6 +1,8 @@
 use crate::sway_output::Screen;
-use cursive::reexports::log::error;
+use cursive::reexports::log::{error, info};
+use nix::sys::wait::waitpid;
 use std::os::unix::prelude::CommandExt;
+use std::process::exit;
 use swayipc::Connection;
 
 pub enum Command {
@@ -33,11 +35,7 @@ impl Command {
             Command::EnableSteamMode => {
                 Command::TvOnly.run()?;
                 conn.run_command("workspace 8")?;
-                let err = std::process::Command::new("steam")
-                    .arg("steam://open/bigpicture")
-                    .exec();
-
-                error!("Failed to launch steam: {err}");
+                unsafe { run_steam_and_exit() }
             }
         }
 
@@ -45,17 +43,28 @@ impl Command {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use cursive::reexports::log::error;
-    use std::os::unix::prelude::CommandExt;
+unsafe fn run_steam_and_exit() {
+    use nix::unistd::{fork, ForkResult};
 
-    #[test]
-    fn run_steam() {
-        let err = std::process::Command::new("steam")
-            .arg("steam://open/bigpicture")
-            .exec();
+    match fork() {
+        Ok(ForkResult::Parent { child, .. }) => {
+            info!("Exiting");
+            waitpid(child, None).unwrap();
+            exit(0)
+        }
+        Ok(ForkResult::Child) => {
+            let err = std::process::Command::new("steam")
+                .arg("steam://open/bigpicture")
+                .exec();
 
-        error!("Failed to launch steam: {err}");
+            error!("Failed to launch steam {}", err);
+            exit(1);
+        }
+        Err(_) => error!("Forking process to launch steam failed"),
     }
+}
+
+#[test]
+fn test() {
+    unsafe { run_steam_and_exit() }
 }

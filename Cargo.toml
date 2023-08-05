@@ -8,4 +8,6 @@ cursive = { version = "0.20.0", features = ["toml"] }
 evdev = "0.12.1"
 anyhow = "1.0.72"
 log = "0.4.19"
-env_logger = "0.10.0"
+systemd-journal-logger = "1.0.0"
+sysinfo = "0.29.7"
+nix = "0.26.2"

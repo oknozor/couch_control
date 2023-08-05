@@ -1,17 +1,24 @@
 use crate::keyboard::emulate_keyboard;
-use env_logger::Env;
 use evdev::Key;
-use log::info;
+use log::{info, LevelFilter};
 use std::sync::mpsc::channel;
 use std::thread;
 use std::time::Duration;
 use sysinfo::{System, SystemExt};
+use systemd_journal_logger::JournalLog;
 
 mod keyboard;
 
 fn main() -> anyhow::Result<()> {
     let mut emulation_running = false;
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    JournalLog::default()
+        .with_extra_fields(vec![("VERSION", env!("CARGO_PKG_VERSION"))])
+        .with_syslog_identifier("xboxkbd".to_string())
+        .install()
+        .unwrap();
+
+    log::set_max_level(LevelFilter::Info);
+
     let mut shutdown_sender = None;
     loop {
         let (shutdown_tx, shutdown_rx) = channel();
