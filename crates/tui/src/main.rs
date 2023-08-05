@@ -3,12 +3,8 @@ mod sway_output;
 
 use crate::commands::Command;
 
-use cursive::views::{CircularFocus};
-use cursive::{
-    traits::*,
-    views::{Dialog},
-    Cursive, CursiveRunnable,
-};
+use cursive::views::CircularFocus;
+use cursive::{traits::*, views::Dialog, Cursive, CursiveRunnable};
 
 fn main() -> anyhow::Result<()> {
     let mut tui = create_tui();

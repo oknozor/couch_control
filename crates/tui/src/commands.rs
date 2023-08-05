@@ -32,6 +32,7 @@ impl Command {
             }
             Command::EnableSteamMode => {
                 Command::TvOnly.run()?;
+                conn.run_command("workspace 8")?;
                 let err = std::process::Command::new("steam")
                     .arg("steam://open/bigpicture")
                     .exec();
