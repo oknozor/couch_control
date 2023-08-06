@@ -24,8 +24,10 @@ fn main() -> anyhow::Result<()> {
         let (shutdown_tx, shutdown_rx) = channel();
         let s = System::new_all();
         let steam_proc = s.processes_by_exact_name("steam").next();
+        let godot_proc = s.processes_by_exact_name("godot").next();
+        let proc = steam_proc.or(godot_proc);
 
-        match steam_proc {
+        match proc {
             None if !emulation_running => {
                 info!("Steam not running starting xbox keyboard emulation");
                 emulation_running = true;
@@ -51,7 +53,6 @@ fn main() -> anyhow::Result<()> {
                     .clone()
                     .expect("Sender should be set")
                     .send(())?;
-                info!("Message sent mother fucker");
                 emulation_running = false
             }
             _ => {}
